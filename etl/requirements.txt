@@ -1,0 +1,6 @@
+pandas
+spotipy
+sqlalchemy
+psycopg2-binary
+aiohttp
+asyncio
