@@ -1,3 +1,6 @@
 etl/.env
 etl/.cache
 etl/__pycache__/
+frontend/.env
+frontend/node_modules/
+frontend/.svelte-kit/
