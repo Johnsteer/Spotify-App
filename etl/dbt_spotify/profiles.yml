@@ -1,0 +1,12 @@
+dbt_spotify:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('DB_HOST') }}"
+      user: "{{ env_var('DB_USER') }}"
+      pass: "{{ env_var('DB_PASSWORD') }}"
+      port: "{{ env_var('DB_PORT') | as_number }}"
+      dbname: defaultdb
+      schema: public 
+      threads: 1
