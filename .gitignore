@@ -10,8 +10,6 @@ etl/dbt_spotify/logs/
 etl/dbt_spotify/.user.yml
 etl/dbt_spotify/analyses/
 etl/dbt_spotify/tests/
-etl/dbt_spotify/seeds/
-etl/dbt_spotify/macros/
 etl/dbt_spotify/snapshots/
 frontend/.env
 frontend/node_modules/
