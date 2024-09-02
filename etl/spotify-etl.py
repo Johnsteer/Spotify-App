@@ -1,29 +1,23 @@
 import asyncio
+import sqlite3
 import math
 import time
-import os
 import pandas as pd
 import aiohttp
 from spotipy.oauth2 import SpotifyOAuth
-from sqlalchemy import create_engine
 from datetime import datetime
 import logging
-from credentials import USER, PASSWORD, DB_HOST, DB_PORT, CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN
+from credentials import CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # Constants
-USER = USER
-PASSWORD = PASSWORD
-DB_HOST = DB_HOST
-DB_PORT = DB_PORT
 SPOTIPY_CLIENT_ID = CLIENT_ID
 SPOTIPY_CLIENT_SECRET = CLIENT_SECRET
 SPOTIPY_REDIRECT_URI = 'http://localhost:3000/'
 SCOPE = 'user-top-read user-read-private user-read-email playlist-read-private user-library-read user-read-recently-played user-follow-read'
-DB_CONNECTION_STRING = f'postgresql://{USER}:{PASSWORD}@{DB_HOST}:{DB_PORT}/defaultdb?sslmode=require'
 BASE_URL = 'https://api.spotify.com/v1'
 
 async def get_spotify_token():
@@ -134,19 +128,6 @@ async def get_saved_tracks(session, headers):
 async def get_audio_features(session, headers, track_ids):
     try:
         audio_features = []
-        # Spotify allows up to 100 tracks per request
-        """
-        for i in range(0, len(track_ids), 100):  
-            batch = track_ids[i:i+100]
-            batch = [x for x in batch if x != None]
-            url = f"{BASE_URL}/audio-features?ids={','.join(batch)}"
-            data = await rate_limited_request(session, url, headers)
-            if data is None or 'audio_features' not in data:
-                logger.info(f"Audio Features - unexpected response format for batch {i} - {i+99}: {data}")    
-            else:
-                audio_features.extend(data['audio_features'])
-            #logger.info(f"Audio Features - success fetching batch {i} - {i+99}")
-        """
         
         if len(track_ids) % 100 == 0:
             for i in range(0, len(track_ids), 100):
@@ -242,16 +223,21 @@ async def main():
             # Create DataFrame
             playlists_tracks_df = pd.DataFrame([item for sublist in playlist_tracks_results for item in sublist])
             playlists_tracks_df.drop_duplicates(inplace=True)
-            tracks_df = playlists_tracks_df[['id','name','artist','album']]
-
-
-
+            tracks_df = playlists_tracks_df[['id','name','artist','album','playlist_id']]
 
             # Fetch saved tracks and audio features
             saved_tracks_df = await get_saved_tracks(session, headers)
-            saved_tracks_df.drop('added_at', axis=1, inplace=True)
-            tracks_df = pd.concat([saved_tracks_df, tracks_df])
-            tracks_df.drop_duplicates(inplace=True).dropna(inplace=True)
+
+            logger.info(f"saved_tracks_df shape: {saved_tracks_df.shape if saved_tracks_df is not None else None}")
+            logger.info(f"tracks_df shape: {tracks_df.shape if tracks_df is not None else None}")
+            if saved_tracks_df is None or tracks_df is None:
+                logger.error("Either saved_tracks_df or tracks_df is None")
+                # Handle this case, maybe by setting an empty DataFrame
+                tracks_df = pd.DataFrame()
+            else:
+                tracks_df = pd.concat([saved_tracks_df, tracks_df])
+                tracks_df.dropna(subset=["id"], inplace=True)
+                logger.info(f"Concatenated tracks_df shape: {tracks_df.shape if tracks_df is not None else None}")
             # Combine tracks from playlists with saved tracks to create a unique set to avoid duplicate requests
             # Although technically Spotify mobile shows your liked tracks as a playlist and it has playlist functionality
             # it is not retrivable via the playlist endpoint
@@ -272,7 +258,7 @@ async def main():
             # Add ingest date column
             df["ingest_date"] = datetime.now()
 
-        engine = create_engine(DB_CONNECTION_STRING)
+        conn = sqlite3.connect("spotify.db")
         logger.info("Created SQL engine")
 
         # Write to database
@@ -283,7 +269,7 @@ async def main():
             'followed_artists',
             'audio_features'
             ]):
-            write_to_database(df, table_name, engine)
+            write_to_database(df, table_name, conn)
         logger.info("ETL process completed successfully")
     except Exception as e:
         logger.error(f"ETL process failed: {str(e)}")

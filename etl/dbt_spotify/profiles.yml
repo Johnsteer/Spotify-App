@@ -2,11 +2,11 @@ dbt_spotify:
   target: dev
   outputs:
     dev:
-      type: postgres
-      host: "{{ env_var('DB_HOST') }}"
-      user: "{{ env_var('DB_USER') }}"
-      pass: "{{ env_var('DB_PASSWORD') }}"
-      port: "{{ env_var('DB_PORT') | as_number }}"
-      dbname: defaultdb
-      schema: public 
+      type: sqlite
       threads: 1
+      database: 'database'
+      schema: 'main'
+      schemas_and_paths:
+        main: '/dbt_spotify/spotify.db'
+      schema_directory: '/dbt_spotify'
+      #optional fields

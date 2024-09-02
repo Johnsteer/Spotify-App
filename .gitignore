@@ -11,6 +11,7 @@ etl/dbt_spotify/.user.yml
 etl/dbt_spotify/analyses/
 etl/dbt_spotify/tests/
 etl/dbt_spotify/snapshots/
+etl/dbt_spotify/spotify.db
 frontend/.env
 frontend/node_modules/
 frontend/.svelte-kit/

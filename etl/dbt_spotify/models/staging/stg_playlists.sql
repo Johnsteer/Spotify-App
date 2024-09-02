@@ -3,6 +3,7 @@ SELECT
     name as playlist_name,
     owner as playlist_owner,
     public as is_public,
-    tracks as total_tracks
+    collaborative as is_collaborative,
+    tracks as track_count
 
 FROM {{ target.schema }}.playlists
