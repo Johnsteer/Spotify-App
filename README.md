@@ -1,69 +1,89 @@
-# Spotify User Profile Dashboard
+# Spotify ETL Project
+
+This project is an ETL (Extract, Transform, Load) pipeline that extracts data from the Spotify API, transforms it, and loads it into a PostgreSQL database. The project is containerized using Docker for easy deployment and scaling.
 
 ## Project Overview
 
-This project is a full-stack web application that displays insights about a user's Spotify profile. It consists of two main components:
+The Spotify ETL project consists of two main Python scripts:
 
-1. **ETL Process**: A Python-based ETL (Extract, Transform, Load) pipeline that pulls data from the Spotify Web API and stores it in a PostgreSQL database.
-2. **Web Application**: A Svelte-based front-end application that retrieves data from the PostgreSQL database and presents it in an interactive dashboard.
+1. `credentials.py`: Manages the secure storage and retrieval of sensitive information.
+2. `generate_token.py` : Used to generate Spotify Refresh token, for persisting authentication throughout script.
+3. `spotify-etl.py`: The main ETL script that interacts with the Spotify API and loads data into the database.
 
-## Project Goals
+The ETL process extracts the following data from Spotify:
+- User's playlists
+- Tracks in playlists
+- User's saved tracks
+- Recently played tracks
+- Followed artists
+- Track Audio Features
 
-The main objectives of this project are:
+Data is transformed into several pandas DataFrames and written to the default database of a PostgreSQL server with ingest date column. Tables are replaced they already exist. This can be changed to append to capture historical data.
+## Prerequisites
 
-1. To gain practical experience in full-stack web development.
-2. To learn and implement the Svelte framework for the front-end.
-3. To work with data from external APIs (Spotify Web API).
-4. To practice database design and management with PostgreSQL.
-5. To improve skills in front-end design and data visualization.
+- Docker
+- Spotify Developer Account
+- PostgreSQL database (hosted on DigitalOcean in this setup)
 
-## Technologies Used
+## Setup and Installation
 
-- **ETL Process**:
-  - Python
-  - Docker
-  - PostgreSQL
-  - Spotify Web API
-- **Web Application**:
-  - Svelte
-  - HTML5
-  - CSS3
-  - Node.js
+1. Clone the repository:
+2. Create a `.env` file in the root directory with the following content:
+```
+  DB_USER=your_db_user
+  DB_PASSWORD=your_db_password
+  DB_HOST=your_db_host
+  DB_PORT=your_db_port
+  SPOTIFY_CLIENT_ID=your_spotify_client_id
+  SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+  SPOTIFY_ACCESS_TOKEN=your_spotify_access_token
+  SPOTIFY_REFRESH_TOKEN=your_spotify_refresh_token
 
+```
+3. Build the Docker image:
+`docker build -t spotify-etl .`
+4. Run the Docker container:
+`docker run -dit --env-file .env --name spotify-etl-container spotify-etl`
+5. Execute Python file in Docker Terminal/Desktop
+`python spotify-etl.py`
 ## Project Structure
+```
+spotify-etl-project/
+│
+├── credentials.py
+├── spotify-etl.py
+├── Dockerfile
+├── requirements.txt
+├── .dockerignore
+└── README.md
+```
+This project uses environment variables to manage sensitive information. Never commit your `.env` file or any file containing credentials to version control.
 
-The project is organized into two main directories:
+## Features
 
-1. `etl/`: Contains the Python-based ETL process that interacts with the Spotify API and loads data into the PostgreSQL database.
-2. `frontend/`: Contains the Svelte-based web application that displays the user's Spotify data in an interactive dashboard.
+- Combination of synchronous and asynchronous API calls using async and aiohttp depending on use case
+- Rate-limiting features such as asyncio.sleep(), asyncio.Semaphore(), and retries to avoid too many requests error #429
+- Creates several tables in the defaultdb of a parametrized PostgreSQL server
+- Error handling and logging
 
-## Current Status
+## To Do
+- Implement a scheduling system for regular data updates
+- Expand the range of data extracted from Spotify
+- Create a web app to visualize data in a dashboard using html/css/javascript framework
 
-The project is in its initial stages. The ETL process has been implemented, and the front-end template has been created using HTML and CSS. The next steps involve:
+## Contributing
 
-1. Connecting the Svelte app to the PostgreSQL database.
-2. Implementing data visualization components.
-3. Adding interactivity to the dashboard.
-4. Refining the design and user experience.
+Contributions to this project are welcome. Please fork the repository and submit a pull request with your changes.
 
-## Future Plans
+## License
 
-- Implement user authentication.
-- Add more detailed analytics and insights.
-- Explore additional features of the Spotify API.
-- Optimize performance and scalability.
-
-## Acknowledgements
-
-- The initial HTML/CSS template for the dashboard was created with assistance from Claude AI.
-- This project uses data from the Spotify Web API.
-
-## Disclaimer
-
-This is a personal project for educational purposes and is not affiliated with or endorsed by Spotify.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contact
 
 John Steer - johnsteer3@gmail.com
 
-Feel free to reach out if you have any questions or suggestions!
+Project Link: [https://github.com/johnsteer/spotify-etl-project](https://github.com/johnsteer/spotify-etl-project)
+
+
+
